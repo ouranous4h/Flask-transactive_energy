@@ -1,4 +1,3 @@
-# Web
 # Flask based app + html, css, javascript + sqlite3
 
 
