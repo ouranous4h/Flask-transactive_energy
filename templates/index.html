@@ -1,0 +1,281 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block welcome %}
+    <div>
+        <header class="masthead">
+            <div class="masthead-subheading">Green Energy</div>
+            <div class="masthead-heading text-uppercase">
+                Renewable energy solutions
+            </div>
+            <a class="btn btn-primary btn-xl text-uppercase js-scroll-trigger"href="/auction">Get Started</a>
+        </header>
+    </div>
+
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-3 col-sm-4">
+                <div class="wrimagecard wrimagecard-topimage">
+                    <a href="/auction">
+                        <div class="wrimagecard-topimage_header" style="background-color: rgba(22, 160, 133, 0.1)">
+                            <center><i class = "fas fa-exchange-alt fa-9x" style="color:#16A085"></i></center>
+                        </div>
+                        <div class="wrimagecard-topimage_title">
+                            <h4>Energy Auction
+                                <div class="pull-right badge" id="WrControls">
+                                </div>
+                            </h4>
+                        </div>
+                        <!-- <div class="wrimagecard-bottom_text">
+                            <p>
+                                Trade your generated energy inside of community!
+                            </p>
+                        </div> -->
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-4">
+                <div class="wrimagecard wrimagecard-topimage">
+                    <a href="/sell">
+                        <div class="wrimagecard-topimage_header" style="background-color: rgba(22, 160, 133, 0.1)">
+                            <center><i class = "fas fa-power-off fa-9x" style="color:#16A085"></i></center>
+                        </div>
+                        <div class="wrimagecard-topimage_title">
+                            <h4>Sell energy
+                                <div class="pull-right badge" id="WrControls">
+                                </div>
+                            </h4>
+                        </div>
+                        <!-- <div class="wrimagecard-bottom_text">
+                            <p>
+                                Sell generated energy to other members of community for your price!
+                            </p>
+                        </div> -->
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-4">
+                <div class="wrimagecard wrimagecard-topimage">
+                    <a href="/auction">
+                        <div class="wrimagecard-topimage_header" style="background-color: rgba(22, 160, 133, 0.1)">
+                            <center><i class = "fas fa-lightbulb fa-9x" style="color:#16A085"></i></center>
+                        </div>
+                        <div class="wrimagecard-topimage_title">
+                            <h4>Buy energy
+                                <div class="pull-right badge" id="WrControls">
+                                </div>
+                            </h4>
+                        </div>
+                        <!-- <div class="wrimagecard-bottom_text">
+                            <p>
+                                Buy energy from community members!
+                            </p>
+                        </div> -->
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-3 col-sm-4">
+                <div class="wrimagecard wrimagecard-topimage">
+                    <a href="/account">
+                        <div class="wrimagecard-topimage_header" style="background-color: rgba(22, 160, 133, 0.1)">
+                            <center><i class = "fas fa-home fa-9x" style="color:#16A085"></i></center>
+                        </div>
+                        <div class="wrimagecard-topimage_title">
+                            <h4>Smart Devices
+                                <div class="pull-right badge" id="WrControls">
+                                </div>
+                            </h4>
+                        </div>
+                        <!-- <div class="wrimagecard-bottom_text">
+                            <p>
+                                Control your Smart Plugs and Distributed Energy Sources!
+                            </p>
+                        </div> -->
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <style>
+
+
+
+        .row {
+            margin-top: 15px;
+        }
+        .wrimagecard{
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            margin-left: 0;
+            margin-right: 0;
+            text-align: center;
+            position: relative;
+            background: #fff;
+            box-shadow: 12px 15px 20px 0px rgba(46,61,73,0.15);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .wrimagecard .fa{
+            position: relative;
+            font-size: 70px;
+        }
+        .wrimagecard-topimage_header{
+            padding: 20px;
+        }
+        a.wrimagecard:hover, .wrimagecard-topimage:hover {
+            box-shadow: 2px 4px 8px 0px rgba(46,61,73,0.2);
+        }
+        .wrimagecard-topimage a {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .wrimagecard-topimage_title {
+            padding: 20px 24px;
+            height: 80px;
+            padding-bottom: 0.75rem;
+            position: relative;
+        }
+
+        .wrimagecard-topimage a {
+            border-bottom: none;
+            text-decoration: none;
+            color: #525c65;
+            transition: color 0.3s ease;
+        }
+        .wrimagecard-bottom_text {
+            padding: 20px 24px;
+            height: 80px;
+            padding-bottom: 0.75rem;
+            position: relative;
+            font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+                "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+
+
+
+
+        header.masthead {
+        padding-top: 10.5rem;
+        padding-bottom: 6rem;
+        text-align: center;
+        color: rgba(52, 185, 52, 0.925);
+        background-image: url("/static/bg-welcome.jpg");
+        background-repeat: no-repeat;
+        background-attachment: scroll;
+        background-position: center center;
+        background-size: cover;
+        }
+        header.masthead .masthead-subheading {
+        font-size: 2rem;
+        font-style: italic;
+        line-height: 1.5rem;
+        margin-bottom: 25px;
+        font-family: "Droid Serif", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+        header.masthead .masthead-heading {
+        font-size: 3.25rem;
+        font-weight: 700;
+        line-height: 3.25rem;
+        margin-bottom: 2rem;
+        font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+        @media (min-width: 768px) {
+        header.masthead {
+        padding-top: 17rem;
+        padding-bottom: 12.5rem;
+        }
+        header.masthead .masthead-subheading {
+        font-size: 2.25rem;
+        font-style: italic;
+        line-height: 2.25rem;
+        margin-bottom: 2rem;
+        }
+        header.masthead .masthead-heading {
+        font-size: 4.5rem;
+        font-weight: 700;
+        line-height: 4.5rem;
+        margin-bottom: 4rem;
+        }
+        }
+        .btn {
+        display: inline-block;
+        font-weight: 400;
+        color: #212529;
+        text-align: center;
+        vertical-align: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-color: transparent;
+        border: 1px solid transparent;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .btn-primary {
+        color: #fff;
+        background-color: #fed136;
+        border-color: #fed136;
+        }
+        .btn-xl {
+        padding: 1.25rem 2.5rem;
+        font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        font-size: 1.125rem;
+        font-weight: 700;
+        }
+        .text-uppercase {
+        text-transform: uppercase !important;
+        }
+        .card-text {
+        font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+            Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+            "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        font-size: 0.95rem;
+        letter-spacing: 0.0625em;
+        font-weight: 400;
+        text-transform: uppercase;
+        }
+        .btn-primary {
+        font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+            Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+            "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        font-size: 0.95rem;
+        letter-spacing: 0.0625em;
+        }
+        .card-body {
+        padding-top: 71.855px;
+        }
+        /* .card {
+        float: right;
+        } */
+    </style>
+{% endblock %}

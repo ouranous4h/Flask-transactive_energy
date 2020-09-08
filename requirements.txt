@@ -1,0 +1,9 @@
+cs50
+Flask
+Flask-Session
+requests
+pk_c5888d38b8e2467d8912e37bad20b74d
+export API_KEY=pk_c5888d38b8e2467d8912e37bad20b74d
+export FLASK_APP=application.py
+export FLASK_ENV=development
+

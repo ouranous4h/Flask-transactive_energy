@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    History
+{% endblock %}
+
+{% block main %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Transaction</th>
+                <th scope="col">Name</th>
+                <th scope="col">Price</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!--{% set count = 1 %}-->
+            {% for row in rows %}
+                <tr>
+                    <th scope="row">{{ loop.index }}</th>
+                    {% if row['type'] == 'sell' %}
+                        <td>Sell</td>
+                    {% elif row['type'] == 'created auction' %}
+                        <td>Created Auction</td>
+                    {% elif row['type'] == 'sold' %}
+                        <td>Sold Auction</td>
+                    {% else %}
+                        <td>Buy</td>
+                    {% endif %}
+                    <td>{{ row['name'] }}</td>
+                    <td>{{ row['price'] | usd}}</td>
+                    <td>{{ row['quantity'] }}</td>
+                    <td>{{ row['date'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

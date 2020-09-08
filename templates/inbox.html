@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  Auction
+{% endblock %}
+
+{% block main %}
+    <table id="table" class="table table-bordered table-sm" cellspacing="0" width="100%"></table>
+    <script>
+    window.operateEvents = {
+        'click .mark': function (e, value, row, index) {
+            fetch('/inbox', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(row)
+            }).then(function (response) {
+                return response.text();
+            }).then(function (text) {
+                if (text == 'marked'){
+                    unmark(row, index)
+                }
+                else {
+                    //don't do anythign
+                    //error
+                }
+            });
+        }
+    }
+    $('#table').bootstrapTable({
+        data: {{ rows|tojson }},
+        pagination: true,
+        search: true,
+        rowStyle: rowStyle,
+        columns: [{
+            field: 'is_read',
+            width:"50px",
+            title: '<a class="mark_all" href="javascript:void(0)" title="Mark all as read" onclick="mark_all()"> <i class="fas fa-envelope-open"></i></a>  ',
+            clickToSelect: false,
+            events: operateEvents,
+            formatter: operateFormatter
+        }, {
+            field: 'type',
+            width:"130px",
+            title: 'Name',
+            sortable: true
+        }, {
+            field: 'description'
+        }, {
+            field: 'date',
+            width:"200px",
+            title: 'Date',
+            sortable: true
+        }]
+    })
+    function unmark(row, index) {
+        $('#table').bootstrapTable('updateRow', {
+            index: index,
+            row: {
+            is_read: 1,
+            type: row['type'],
+            date: row['date']
+            }
+        })
+        num = 1;
+        reload(num)
+    }
+    function reload(num){
+        var container = document.getElementsByClassName("notif");
+        var content = container[0].innerText;
+        container[0].innerText = content - num;
+    }
+    function unmark_all() {
+        //bad way of doing this,
+        //basically linear algorithm, O = n
+        rows = $('#table').bootstrapTable('getData')
+        count = 0
+        for (i = 0; i < rows.length; i++) {
+            if (rows[i]['is_read'] === "0") {
+                count++
+            }
+            $('#table').bootstrapTable('updateRow', {
+                index: i,
+                row: {
+                is_read: 1,
+                type: rows[i]['type'],
+                date: rows[i]['date']
+                }
+            })
+        }
+        if (count === 0) {
+        }
+        else {
+            num = document.getElementsByClassName("notif")[0].innerText;
+            reload(num)
+        }
+    }
+    function rowStyle(row, index) {
+        if (row["is_read"] === "0") {
+            return {
+                css: {
+                    padding: '10px',
+                    background: 'rgba(255,255,255,0.902)'
+                },
+                classes: 'tr'
+            }
+        }
+        else {
+            return {
+                css: {
+                    padding: '10px',
+                    background: 'rgba(242,245,245,0.8)'
+                },
+                classes: 'tr'
+            }
+        }
+
+    }
+    function mark_all(){
+        //bad design, it always sends query request to database instead of
+        //checking if any of the rows is unread and then send query to db
+        fetch('/inbox', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify("mark_all")
+        }).then(function (response) {
+            return response.text();
+        }).then(function (text) {
+            if (text == 'marked_all'){
+                //change all to is_read = 1
+                unmark_all()
+            }
+            else {
+                //don't do anythign
+                //error
+            }
+        });
+    }
+    function operateFormatter(value, row, index, field) {
+        if (row["is_read"] === "0") {
+            return [
+            '<a class="mark" href="javascript:void(0)" title="Mark as read">',
+            '<i class="fas fa-envelope-open"></i>',
+            '</a>  '
+            ].join('')
+        }
+        else {
+            return [
+                ''
+            ]
+        }
+    }
+    </script>
+    <style>
+        .tr:hover {
+            border-top: 3px solid rgba(124, 204, 243, 0.58);
+            border-bottom: 3px solid rgba(124, 204, 243, 0.58);
+        }
+        .mark {
+            background:transparent;
+        }
+        .mark_all {
+            background:transparent;
+            color:crimson
+        }
+    </style>
+{% endblock %}

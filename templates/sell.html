@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Buy
+{% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="card bg-light">
+            <article class="card-body mx-auto" style="max-width: 400px;">
+            	<h4 class="card-title mt-3 text-center">Choose energy to sell</h4>
+        	    <form action="/sell" method="post">
+                    <div class="form-group input-group">
+                        <div class="input-group-prepend">
+                		    <span class="input-group-text"> <i class="fa fa-battery-full"></i> </span>
+                		</div>
+                        <select class="custom-select" name = "index">
+                            <option selected>Choose...</option>
+                            {% for row in rows %}
+                                <option value={{ loop.index - 1}}>{{ row['name'] }} Available: {{ row['unused_energy'] | watt }}, Total: {{ row['total_energy'] | watt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group input-group">
+                        <input autocomplete="off" autofocus class="form-control" name="energy" placeholder="Energy amount, Watt" type="number" min="100" step="50">
+                    </div>
+                    <div class="form-group input-group">
+                        <input autocomplete="off" autofocus class="form-control" name="price" placeholder="Price, $" type="number" min="0">
+                    </div>
+                    <div class="form-group input-group">
+                        <input autocomplete="off" autofocus class="form-control" name="description" placeholder="Enter details" type="text">
+                    </div>
+                    <!--<button class="btn btn-primary" type="submit">Log In</button>-->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Sell</button>
+                    </div>
+                </form>
+            </article>
+        </div>
+    </div>
+{% endblock %}
