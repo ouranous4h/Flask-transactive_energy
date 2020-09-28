@@ -5,7 +5,18 @@
 {% endblock %}
 
 {% block main %}
-    <table id="table" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%"></table>
+    <form style="display: none" action="/participate" method="POST" id="form">
+      <input type="hidden" id="var1" name="row" value=""/>
+      <input type="hidden" id="var2" name="rows" value=""/>
+    </form>
+    <table id="table" class="table table-striped table-bordered table-sm" cellspacing="0"></table>
+    <caption>Buy energy</caption>
+    <table id="tableTimed"
+      class="table table-striped table-bordered table-sm"
+      cellspacing="0">
+    </table>
+    <caption>Bid on energy demand lots</caption>
+
     <script>
       window.operateEvents = {
         'click .buy': function (e, value, row, index) {
@@ -34,11 +45,9 @@
               }
             });
           }
-
-          //alert('You click like action, row: ' + JSON.stringify(row))
-
         }
       }
+      ////////////// left table
       $('#table').bootstrapTable({
         data: {{ rows|tojson }},
         pagination: true,
@@ -71,6 +80,72 @@
         return [
           '<a class="buy" href="javascript:void(0)" title="Buy">',
           '<i class="fas fa-shopping-cart"></i>',
+          '</a>  '
+        ].join('')
+      }
+    </script>
+
+
+    <script>
+      window.operateEventsTimed = {
+        'click .participate': function (e, value, row, index) {
+          have = 0
+          rows = []
+          for (i = 0; i < {{ gens|tojson }}.length; i++) {
+            if (row['region'] == {{ gens|tojson }}[i]['regions_id']) {
+              have = 1
+              rows.push({{ gens|tojson }}[i])
+            }
+          }
+          if (have != 1) {
+            alert("You don't have generators in that area")
+          }
+          else {
+            $("#var1").val(JSON.stringify(row));
+            $("#var2").val(JSON.stringify(rows));
+            $("#form").submit();
+          }
+        }
+      }
+
+      function detailFormatter(index, row) {
+        var html = []
+        $.each(row, function (key, value) {
+          html.push('<p><b>' + key + ':</b> ' + value + '</p>')
+        })
+        return html.join('')
+      }
+
+      //////////////// right table
+      $('#tableTimed').bootstrapTable({
+        data: {{ timed_auctions|tojson }},
+        pagination: true,
+        search: true,
+        columns: [{
+          field: 'region',
+          title: 'Region',
+          sortable: true
+        }, {
+          field: 'consumption',
+          title: 'Energy amount',
+          sortable: true
+        }, {
+          field: 'expiration-time',
+          title: 'Expiration time',
+          sortable: true
+        }, {
+          field: 'operate',
+          align: 'center',
+          clickToSelect: false,
+          formatter: operateFormatterTimed,
+          events: operateEventsTimed
+        }]
+      })
+
+      function operateFormatterTimed(value, row, index, field) {
+        return [
+          '<a class="participate" href="javascript:void(0)" title="Participate in lot">',
+          '<i class="fas fa-user-plus"></i>',
           '</a>  '
         ].join('')
       }
@@ -223,4 +298,7 @@
           $('#locale').change(initTable)
         })
       </script> -->
+
+
+
 {% endblock %}

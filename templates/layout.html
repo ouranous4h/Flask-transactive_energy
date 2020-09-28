@@ -24,6 +24,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.17.1/bootstrap-table.min.js"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.17.1/bootstrap-table.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://developers.google.com//maps/documentation/javascript/demos/demos.css">
 
             <!-- bootbox code -->
             <!-- JS dependencies -->
@@ -45,9 +46,15 @@
                         <li class="nav-item"><a class="nav-link" href="/auction">Auction</a></li>
                         <li class="nav-item"><a class="nav-link" href="/sell">Sell</a></li>
                         <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
+                        {% if session.admin %}
+                            <li class="nav-item"><a class="nav-link" href="/vpp">Virtual Power Plant</a></li>
+                        {% endif %}
                     </ul>
                     <ul class="navbar-nav ml-auto mt-2">
-                        <li class="nav-item" style="padding-right: 50px;"><a class="nav-link">{{ session.cash | usd}}</a></li>
+                        {% if session.admin %}
+                        {% else %}
+                            <li class="nav-item" style="padding-right: 50px;"><a class="nav-link">{{ session.cash | usd}}</a></li>
+                        {% endif %}
                         <li class="nav-item"><a class="nav-link" href="/inbox"><i class="far fa-envelope fa-lg" style="position: relative;">
                             <span class="notif"
                             style="
@@ -65,7 +72,11 @@
                                 {% endif %}
                             </span>
                         </i></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/account">Account</a></li>
+                        {% if session.admin %}
+                            <li class="nav-item"><a class="nav-link" href="/account">Admin Account</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="/account">Account</a></li>
+                        {% endif %}
                         <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
                     </ul>
                 {% else %}

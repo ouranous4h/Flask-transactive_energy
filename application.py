@@ -8,10 +8,16 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 import datetime
-from helpers import apology, login_required, usd, watt
+from helpers import apology, login_required, usd, watt, distance
 import json
 import secrets
 
+from flask_googlemaps import GoogleMaps
+from flask_googlemaps import Map
+
+
+timed_auctions = []
+created_timed_auctions = [False]
 
 # Configure application
 app = Flask(__name__)
@@ -19,7 +25,7 @@ app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-
+#app.config['GOOGLEMAPS_KEY'] = "8JZ7i18MjFuM35dJHq70n3Hx4"
 # Ensure responses aren't cached
 @app.after_request
 def after_request(response):
@@ -37,12 +43,13 @@ app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-
+GoogleMaps(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///finance.db")#, check_same_thread=False)
 # con = SQL.connect("finance.db")
 # with con:
 #     db = con.cursor()
+
 try:
     db.execute("""CREATE TABLE 'history'('history_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     'user_id' INTEGER NOT NULL, 'name' TEXT NOT NULL, 'price' NUMERIC NOT NULL,
@@ -50,6 +57,16 @@ try:
     db.execute("""CREATE UNIQUE INDEX 'history_id' ON 'history'('history_id');""")
 except:
     print("History Table already exists")
+
+try:
+    db.execute("""CREATE TABLE 'bids'('bid_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    'user_id' INTEGER NOT NULL, 'price' NUMERIC NOT NULL, 'energy' NUMERIC NOT NULL,
+    'date' DATE, 'regions_id' INTEGER NOT NULL,
+    FOREIGN KEY ('user_id') REFERENCES 'users'('id'),
+    FOREIGN KEY('regions_id') REFERENCES 'regions'('regions_id')); """)
+    db.execute("""CREATE UNIQUE INDEX 'history_id' ON 'history'('history_id');""")
+except:
+    print("Bids Table already exists")
 
 try:
     db.execute("""CREATE TABLE 'products'('product_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'name' TEXT NOT NULL,
@@ -74,6 +91,31 @@ except:
     print("Device Table already exists")
 
 try:
+    db.execute("""CREATE TABLE 'devices_locn'('dev_location_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        'lat' REAL NOT NULL, 'lng' REAL NOT NULL, 'regions_id' INTEGER NOT NULL,
+		'device_id' INTEGER NOT NULL, FOREIGN KEY('device_id') REFERENCES 'devices'('device_id'),
+        FOREIGN KEY('regions_id') REFERENCES 'regions'('regions_id'));""")
+    db.execute("""CREATE UNIQUE INDEX 'dev_location_id' ON 'devices_locn'('dev_location_id');""")
+except:
+    print("Device Location Table already exists")
+
+try:
+    db.execute("""CREATE TABLE 'regions'('regions_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        'lat' REAL NOT NULL, 'lng' REAL NOT NULL,
+		'radius' REAL NOT NULL);""")
+    db.execute("""CREATE UNIQUE INDEX 'regions_id' ON 'regions'('regions_id');""")
+except:
+    print("Regions Table already exists")
+
+try:
+    db.execute("""CREATE TABLE 'generators_locn'('gen_location_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        'lat' REAL NOT NULL, 'lng' REAL NOT NULL,
+		'generator_id' INTEGER NOT NULL, FOREIGN KEY('generator_id') REFERENCES 'generators'('generator_id'));""")
+    db.execute("""CREATE UNIQUE INDEX 'gen_location_id' ON 'generators_locn'('gen_location_id');""")
+except:
+    print("Device Table already exists")
+
+try:
     db.execute("""CREATE TABLE 'generators'('generator_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 		'user_id' INTEGER NOT NULL, 'name' TEXT NOT NULL, 'state' TEXT NOT NULL,
 		'unused_energy' INTEGER NOT NULL, 'selling_energy' INTEGER NOT NULL, 'total_energy' INTEGER NOT NULL, FOREIGN KEY('user_id') REFERENCES 'users'('id'));""")
@@ -89,6 +131,12 @@ try:
 except:
     print("Energy Table already exists")
 
+try:
+    db.execute("""CREATE TABLE 'admins'('admin_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    'user_id' INTEGER NOT NULL, FOREIGN KEY('user_id') REFERENCES 'users'('id'));""")
+    db.execute("""CREATE UNIQUE INDEX 'admin_id' ON 'admins'('admin_id');""")
+except:
+    print("Admin Table already exists")
 # Make sure API key is set
 # if not os.environ.get("API_KEY"):
 #     raise RuntimeError("API_KEY not set")
@@ -164,7 +212,7 @@ def account():
                 db.execute("UPDATE products SET activated = :activated WHERE product_id = :product_id", activated = "yes", product_id = row[0]['product_id'])
                 db.execute("""INSERT INTO devices (user_id, name, state, consumption)
                             VALUES (:user_id, :name, :state, :consumption)""",
-                            user_id=session["user_id"], name=row[0]['name'], state="initialized", consumption=0)
+                            user_id=session["user_id"], name=row[0]['name'], state=" ", consumption=0)
                 return "activated!", 200
 
 
@@ -212,6 +260,60 @@ def buy():
             return 'its gone', 200
 
 
+@app.route("/participate", methods=["GET", "POST"])
+@login_required
+def participate():
+    db = SQL("sqlite:///finance.db")
+
+    count = db.execute("SELECT COUNT(*) FROM mails WHERE user_id = :user_id AND is_read = :is_read", user_id=session["user_id"], is_read = 0)
+    session["mail"] = count[0]['COUNT(*)']
+    rows = db.execute("SELECT * FROM users WHERE id = :user_id", user_id = session["user_id"])
+    session["cash"] = rows[0]['cash']
+
+    if request.method == 'POST':
+        lot = request.form.get("row")
+        generators = request.form.get("rows")
+        lot = json.loads(lot)
+        generators = json.loads(generators)
+        return render_template("participate.html", lot = lot, generators = generators)
+    else:
+        print("123")
+        return render_template("index.html")
+
+@app.route("/bid", methods=["GET", "POST"])
+@login_required
+def bid():
+    db = SQL("sqlite:///finance.db")
+
+    count = db.execute("SELECT COUNT(*) FROM mails WHERE user_id = :user_id AND is_read = :is_read", user_id=session["user_id"], is_read = 0)
+    session["mail"] = count[0]['COUNT(*)']
+    rows = db.execute("SELECT * FROM users WHERE id = :user_id", user_id = session["user_id"])
+    session["cash"] = rows[0]['cash']
+
+    if request.method == 'POST':
+        index = request.form.get("index")
+        region = request.form.get("region")
+        if index == 'Choose...':
+            return apology("Enter valid response")
+        else:
+            index = int(index)
+            region = int(region)
+            energy = int(request.form.get("energy"))
+            rows = db.execute("SELECT * FROM generators WHERE user_id = :user_id AND generator_id = (SELECT generator_id FROM generators_locn WHERE regions_id = :regions_id)", user_id = session['user_id'], regions_id = region)
+            if energy > rows[index]['unused_energy']:
+                return apology("You don't own that much of available energy")
+            else:
+                db.execute("UPDATE generators SET unused_energy = unused_energy - :energy, selling_energy = selling_energy + :energy WHERE generator_id = :generator_id",
+                                energy = energy, generator_id = rows[index]['generator_id']);
+                db.execute("INSERT INTO bids (user_id, price, energy, date, regions_id) VALUES (:user_id, :price, :energy, :date, :regions_id)",
+                                user_id=session["user_id"], price=request.form.get("price"), energy = energy, date = datetime.datetime.now(), regions_id = region)
+                db.execute("INSERT INTO history (user_id, name, price, quantity, type, date) VALUES (:user_id, :name, :price, :quantity, :type, :date)",
+                                user_id=session["user_id"], name="Bid on energy lot", price=request.form.get("price"), quantity = energy, type='bid on lot', date = datetime.datetime.now())
+                return redirect('/history')
+        return #render_template("participate.html", lot = lot, generators = generators)
+    else:
+        print("123")
+        return render_template("index.html")
 
 @app.route("/history")
 @login_required
@@ -264,6 +366,11 @@ def login():
         count = db.execute("SELECT COUNT(*) FROM mails WHERE user_id = :user_id AND is_read = :is_read", user_id=session["user_id"], is_read = 0)
         session["mail"] = count[0]['COUNT(*)']
 
+        ### if the user is login:
+        admin_rows = db.execute("SELECT * FROM admins WHERE user_id = :user_id", user_id = session["user_id"])
+        if admin_rows:
+            print("123")
+            session["admin"] = admin_rows[0]["admin_id"]
         # Redirect user to home page
         return redirect("/")
 
@@ -276,11 +383,78 @@ def login():
 def logout():
     """Log user out"""
 
-    # Forget any user_id
+    ### Forget any user_id
     session.clear()
 
-    # Redirect user to login form
+    ### Redirect user to login form
     return redirect("/")
+
+
+@app.route("/vpp", methods=["GET", "POST"])
+@login_required
+def vpp():
+    if request.method == "POST":
+        return "123"
+    else:
+        db = SQL("sqlite:///finance.db")
+
+        ### Gets markers for devices
+        ### markers for generators
+        device_rows = db.execute("""SELECT devices.device_id, devices.user_id, devices.name, devices.state, devices.consumption, devices_locn.lat, devices_locn.lng FROM devices
+	                        INNER JOIN devices_locn ON devices.device_id = devices_locn.device_id;""")
+        generator_rows = db.execute("""SELECT generators.generator_id, generators.user_id, generators.name, generators.state, generators.unused_energy, generators.selling_energy, generators.total_energy, generators_locn.lat, generators_locn.lng FROM generators
+	                        INNER JOIN generators_locn ON generators.generator_id = generators_locn.generator_id;""")
+        markers = []
+        for row in device_rows:
+            markers.append({
+                'icon': 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                'lat': row['lat'],
+                'lng': row['lng'],
+                'infobox': "User id: " + str(row['user_id']) + "<br>" +
+                            "Name: " + row['name'] + "<br>" +
+                            "State: " + row['state'] + "<br>" +
+                            "Load: " + str(row['consumption'])
+            })
+        for row in generator_rows:
+            markers.append({
+                'icon': 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                'lat': row['lat'],
+                'lng': row['lng'],
+                'infobox': "User id: " + str(row['user_id']) + "<br>" +
+                            "Name: " + row['name'] + "<br>" +
+                            "State: " + row['state'] + "<br>" +
+                            "Hot reserve: " + str(row['unused_energy']) + "<br>" +
+                            "Selling energy: " + str(row['selling_energy']) + "<br>" +
+                            "Total capacity: " + str(row['total_energy'])
+            })
+
+        ### Gets regions and draws circles on map (zones of same trading)
+        circle_rows = db.execute("""SELECT * FROM regions""")
+        circles = []
+        for row in circle_rows:
+            circles.append({
+                "stroke_color": "#00FF84",
+                "stroke_opacity": 0.4,
+                "stroke_weight": 4,
+                "fill_color": "#FFFFFF",
+                "fill_opacity": 0.2,
+                "center": {"lat": row['lat'], "lng": row['lng']},
+                "radius": row['radius']
+            })
+
+        ### Create Map instance for Google Map
+        sndmap = Map(
+            identifier="sndmap",
+            lat = markers[0]['lat'],
+            lng = markers[0]['lng'],
+            markers = markers,
+            fit_markers_to_bounds = True,
+            circles=circles
+        )
+
+        if created_timed_auctions[0] !=True:
+            createEnergy()
+        return render_template('vpp.html', sndmap=sndmap, timed_auctions = timed_auctions)
 
 
 @app.route("/auction", methods=["GET", "POST"])
@@ -289,17 +463,24 @@ def auction():
     """Shows list of available auctions:
     """
     if request.method == "POST":
-        return "123"
+        return redirect("/")
     else:
         db = SQL("sqlite:///finance.db")
         rows = db.execute("SELECT * FROM users WHERE id = :user_id", user_id = session["user_id"])
         session["cash"] = rows[0]['cash']
         count = db.execute("SELECT COUNT(*) FROM mails WHERE user_id = :user_id AND is_read = :is_read", user_id=session["user_id"], is_read = 0)
         session["mail"] = count[0]['COUNT(*)']
+        ### bad way to do this
+        ### every time we push button 'auction' it will append the existing list (row copies may be created)
+        if created_timed_auctions[0] !=True:
+            createEnergy()
 
         rows = db.execute("""SELECT * FROM energy""")
         cash = db.execute("SELECT cash FROM users WHERE id = :user_id", user_id = session["user_id"])
-        return render_template("auction.html", rows = rows, cash = cash)
+
+
+        gens = db.execute("SELECT * FROM (SELECT * FROM generators INNER JOIN generators_locn WHERE generators.generator_id = generators_locn.generator_id) WHERE user_id = :user_id", user_id = session["user_id"])
+        return render_template("auction.html", rows = rows, cash = cash, timed_auctions = timed_auctions, gens = gens)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -408,3 +589,32 @@ def errorhandler(e):
 # Listen for errors
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
+
+### Should run with period time T
+### takes demanding amount of energy, regions and creates appropriate auction lots (timed)
+def createEnergy():
+    db = SQL("sqlite:///finance.db")
+    rows = db.execute("SELECT * FROM devices INNER JOIN devices_locn WHERE devices.device_id = devices_locn.device_id")
+
+    ### bad way to do this
+    ### it should check if the row is not present in the 'timed_auctions" list and then append it
+    regions = set()
+    for row in rows:
+        regions.add(row['regions_id'])
+    for region in regions:
+        timed_auctions.append({
+            'region': region,
+            'consumption': 0,
+            'device_ids': [],
+            'expiration-time': None
+        })
+    for row in rows:
+        for item in timed_auctions:
+            if item['region'] == row['regions_id']:
+                item['consumption'] += row['consumption']
+                item['device_ids'].append(row['device_id'])
+
+    for item in timed_auctions:
+        item['expiration-time'] = datetime.datetime.now() + datetime.timedelta(hours = 1)
+    created_timed_auctions[0] = True
+    return

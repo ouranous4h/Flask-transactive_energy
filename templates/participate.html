@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Buy
+{% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="card bg-light">
+            <article class="card-body mx-auto" style="max-width: 400px;">
+                <h4 class="card-title mt-3 text-center">Select bid on the selected lot.</h4>
+                <h4 class="card-text mt-3 text-center">Lot energy: {{ lot['consumption'] | watt }}, Region: {{ lot['region'] }}</h4>
+        	    <form action="/bid" method="post">
+                    <div class="form-group input-group">
+                        <div class="input-group-prepend">
+                		    <span class="input-group-text"> <i class="fa fa-battery-full"></i> </span>
+                		</div>
+                        <select class="custom-select" name = "index">
+                            <option selected>Choose...</option>
+                            {% for generator in generators %}
+                                <option value={{ loop.index - 1}}>{{ generator['name'] }} Available: {{ generator['unused_energy'] | watt }}, Total: {{ generator['total_energy'] | watt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group input-group">
+                        <input autocomplete="off" autofocus class="form-control" name="energy" placeholder="Energy amount, Watt" type="number" min="100" step="50">
+                    </div>
+                    <div class="form-group input-group">
+                        <input autocomplete="off" autofocus class="form-control" name="price" placeholder="Price, $" type="number" min="0">
+                    </div>
+                    <!--<button class="btn btn-primary" type="submit">Log In</button>-->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Bid on auction!</button>
+                    </div>
+                    <input type="hidden" name="region" value="{{ lot['region'] }}"/>
+                </form>
+            </article>
+        </div>
+    </div>
+{% endblock %}
