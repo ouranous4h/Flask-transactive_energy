@@ -5,5 +5,4 @@
 
 
 # need to add MQTT to the flask to control smart devices efficiently. 
-# made by Nursultan Ashenov, 2020. 
-# chevchellioos@gmail.com
+https://www.youtube.com/watch?v=ZqglkoBGyXc&ab_channel=Ouranous4h
